@@ -1,4 +1,0 @@
-proc main()
-start
-    echo("Olá mundo");
-end
