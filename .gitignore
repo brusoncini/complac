@@ -1,0 +1,45 @@
+# =========================
+# Binários compilados
+# =========================
+*.exe
+*.out
+*.o
+*.obj
+complac
+salc
+slac2
+
+
+# =========================
+# Arquivos temporários
+# =========================
+*.tmp
+*.swp
+*~
+.vscode/
+
+# =========================
+# Logs gerados pelo compilador
+# =========================
+*.tk
+*.ts
+*.trc
+*.log
+
+# =========================
+# Arquivos de teste gerados
+# =========================
+*.slac~
+*.bak
+
+# =========================
+# Sistema operacional
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Debug
+# =========================
+*.dSYM/
+core

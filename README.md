@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/tipo-projeto%20acadêmico-purple">
 </p>
 
-Compilador desenvolvido em C para a linguagem **SAL (Simple Academic Language)**, criado para a disciplina de Compiladores.
+Compilador desenvolvido em C para a linguagem **SLAC²**, criado para a disciplina de Compiladores.
 
 O projeto implementa:
 
