@@ -1,28 +1,21 @@
 #include <stdio.h>
 
 #include "lex.h"
+#include "symtab.h"
 
-int main(int argc, char **argv)
+void teste_lexer()
 {
+    char arquivo_nome[256];
 
-    /*
-    ===============================
-        TESTE ANALISADOR LÉXICO
-    ===============================
-    */
+    printf("Arquivo .slac: ");
+    scanf("%s", arquivo_nome);
 
-    if (argc < 2)
-    {
-        printf("Uso: %s arquivo.slac\n", argv[0]);
-        return 1;
-    }
-
-    FILE *arquivo = fopen(argv[1], "r");
+    FILE *arquivo = fopen(arquivo_nome, "r");
 
     if (arquivo == NULL)
     {
-        printf("Erro ao abrir arquivo\n");
-        return 1;
+        printf("Erro ao abrir arquivo.\n");
+        return;
     }
 
     inicializa_lex(arquivo);
@@ -42,6 +35,72 @@ int main(int argc, char **argv)
     } while (atomo.atomo != FIMARQUIVO);
 
     fclose(arquivo);
+}
+
+void teste_tabela_simbolos()
+{
+    TabelaSimbolos tabela;
+
+    inicializa_tabela(&tabela);
+
+    insere_simbolo(
+        &tabela,
+        "idade",
+        VARIAVEL,
+        TIPO_INT,
+        GLOBAL);
+
+    insere_simbolo(
+        &tabela,
+        "nome",
+        VARIAVEL,
+        TIPO_CHR,
+        LOCAL);
+
+    insere_simbolo(
+        &tabela,
+        "soma",
+        SUBROTINA,
+        TIPO_INT,
+        GLOBAL);
+
+    imprime_tabela(&tabela);
+}
+
+int main()
+{
+    int opcao;
+
+    do
+    {
+        printf("\n===== COMPLAC =====\n");
+        printf("1 - Testar analisador lexico\n");
+        printf("2 - Testar tabela de simbolos\n");
+        printf("0 - Sair\n");
+        printf("\nOpcao: ");
+
+        scanf("%d", &opcao);
+
+        switch (opcao)
+        {
+
+        case 1:
+            teste_lexer();
+            break;
+
+        case 2:
+            teste_tabela_simbolos();
+            break;
+
+        case 0:
+            printf("Encerrando...\n");
+            break;
+
+        default:
+            printf("Opcao invalida.\n");
+        }
+
+    } while (opcao != 0);
 
     return 0;
 }

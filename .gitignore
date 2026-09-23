@@ -29,6 +29,7 @@ slac2
 # Arquivos de teste gerados
 # =========================
 teste.slac
+teste-erro.slac
 *.slac~
 *.bak
 

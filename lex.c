@@ -46,6 +46,7 @@ static TInfoAtomo verifica_reservada(char *texto)
             {"end", END},
             {"globvars", GLOBVARS},
             {"locvars", LOCVARS},
+            {"is", IS},
             {"echo", ECHO},
             {"get", GET},
             {"case", CASE},
@@ -86,7 +87,7 @@ TInfoAtomo proximo_atomo()
     while ((caractere = fgetc(arquivo_fonte)) != EOF)
     {
 
-        if (caractere == ' ' || caractere == '\t')
+        if (caractere == ' ' || caractere == '\t' || caractere == '\r')
             continue;
 
         if (caractere == '\n')
@@ -231,13 +232,31 @@ TInfoAtomo proximo_atomo()
             return cria_atomo(SOMA, "+");
 
         case '-':
+        {
+            int proximo = fgetc(arquivo_fonte);
+
+            if (proximo == '>')
+                return cria_atomo(SETA, "->");
+
+            ungetc(proximo, arquivo_fonte);
+
             return cria_atomo(SUBTRACAO, "-");
+        }
 
         case '*':
             return cria_atomo(MULTIPLICACAO, "*");
 
         case '/':
-            return cria_atomo(DIVISAO, "/");
+        {
+            int proximo = fgetc(arquivo_fonte);
+
+            if (proximo == '/')
+                return cria_atomo(DIVISAO, "//");
+
+            ungetc(proximo, arquivo_fonte);
+
+            return cria_atomo(ERRO, "/");
+        }
 
         case '=':
             return cria_atomo(IGUAL, "=");
@@ -396,6 +415,21 @@ char *nome_atomo(TAtomo atomo)
 
     case DOISPONTOS:
         return "DOISPONTOS";
+
+    case IS:
+        return "IS";
+
+    case INT:
+        return "INT";
+
+    case LOGIC:
+        return "LOGIC";
+
+    case CHR:
+        return "CHR";
+
+    case SETA:
+        return "SETA";
 
     case ERRO:
         return "ERRO";
