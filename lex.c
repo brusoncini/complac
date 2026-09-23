@@ -1,259 +1,409 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
 #include "lex.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+static FILE *arquivo_fonte;
+static int linha_atual;
 
-FILE *arquivo;
-
-int linhaAtual;
-
-typedef struct
+static TInfoAtomo cria_atomo(TAtomo atomo, char *texto)
 {
-    char *palavra;
-    TAtomo token;
+    TInfoAtomo info;
 
-} Palavra;
+    info.atomo = atomo;
+    strcpy(info.texto, texto);
+    info.linha = linha_atual;
 
-Palavra palavras[] =
-    {
-        {"proc", S_PROC},
-        {"func", S_FUNC},
-        {"main", S_MAIN},
-        {"globvars", S_GLOBVARS},
-        {"locvars", S_LOCVARS},
-        {"start", S_START},
-        {"end", S_END},
-        {"echo", S_ECHO},
-        {"get", S_GET},
-        {"case", S_CASE},
-        {"otherwise", S_OTHERWISE},
-        {"choose", S_CHOOSE},
-        {"match", S_MATCH},
-        {"others", S_OTHERS},
-        {"for", S_FOR},
-        {"from", S_FROM},
-        {"to", S_TO},
-        {"by", S_BY},
-        {"while", S_WHILE},
-        {"repeat", S_REPEAT},
-        {"until", S_UNTIL},
-        {"return", S_RETURN},
-        {"int", S_INT},
-        {"logic", S_LOGIC},
-        {"chr", S_CHR},
-        {NULL, 0}
-
-};
-
-TAtomo reconhece_palavra(char texto[])
-{
-
-    int i = 0;
-
-    while (palavras[i].palavra != NULL)
-    {
-        if (strcmp(texto, palavras[i].palavra) == 0)
-            return palavras[i].token;
-        i++;
-    }
-
-    return S_IDENTIF;
+    return info;
 }
 
-void lex_init(char *nomeArquivo)
+void inicializa_lex(FILE *arquivo)
 {
-
-    arquivo = fopen(nomeArquivo, "r");
-
-    if (arquivo == NULL)
-    {
-        printf("Erro ao abrir arquivo\n");
-        exit(1);
-    }
-
-    linhaAtual = 1;
+    arquivo_fonte = arquivo;
+    linha_atual = 1;
 }
 
-TInfoAtomo lex_next()
+static void adiciona_caractere(char *texto, int *posicao, char caractere)
 {
-
-    TInfoAtomo token;
-    token.lexema[0] = '\0';
-    token.linha = linhaAtual;
-
-    int c;
-
-    do
-    {
-        c = fgetc(arquivo);
-
-        if (c == '\n')
-            linhaAtual++;
-
-    } while (isspace(c));
-
-    if (c == EOF)
-    {
-        token.atomo = S_FIM;
-
-        return token;
-    }
-
-    if (isalpha(c))
-    {
-        int i = 0;
-
-        do
-        {
-            token.lexema[i++] = c;
-            c = fgetc(arquivo);
-
-        } while (isalnum(c) || c == '_');
-
-        token.lexema[i] = '\0';
-        ungetc(c, arquivo);
-        token.atomo = reconhece_palavra(token.lexema);
-
-        return token;
-    }
-
-    if (isdigit(c))
-    {
-        int i = 0;
-
-        do
-        {
-            token.lexema[i++] = c;
-            c = fgetc(arquivo);
-
-        } while (isdigit(c));
-
-        token.lexema[i] = '\0';
-        ungetc(c, arquivo);
-        token.atomo = S_CTEINT;
-
-        return token;
-    }
-
-    if (c == '"')
-    {
-        int i = 0;
-        c = fgetc(arquivo);
-
-        while (c != '"' && c != EOF)
-        {
-            token.lexema[i++] = c;
-            c = fgetc(arquivo);
-        }
-
-        token.lexema[i] = '\0';
-        token.atomo = S_STRING;
-
-        return token;
-    }
-
-    switch (c)
-    {
-    case '<':
-        c = fgetc(arquivo);
-
-        if (c == '<')
-        {
-            token.atomo = S_ATRIB;
-            strcpy(token.lexema, "<<");
-        }
-        else
-        {
-            token.atomo = S_MENOR;
-            strcpy(token.lexema, "<");
-
-            ungetc(c, arquivo);
-        }
-
-        return token;
-    case '+':
-        token.atomo = S_SOMA;
-        strcpy(token.lexema, "+");
-
-        return token;
-    case '-':
-        token.atomo = S_SUBRAT;
-        strcpy(token.lexema, "-");
-
-        return token;
-    case '*':
-        token.atomo = S_MULT;
-        strcpy(token.lexema, "*");
-
-        return token;
-    case '=':
-        token.atomo = S_IGUAL;
-        strcpy(token.lexema, "=");
-
-        return token;
-    case '(':
-        token.atomo = S_ABREPAR;
-        strcpy(token.lexema, "(");
-
-        return token;
-    case ')':
-        token.atomo = S_FECHAPAR;
-        strcpy(token.lexema, ")");
-
-        return token;
-    case ';':
-        token.atomo = S_PONTOEVIRGULA;
-        strcpy(token.lexema, ";");
-
-        return token;
-    case ',':
-        token.atomo = S_VIRGULA;
-        strcpy(token.lexema, ",");
-
-        return token;
-    }
-
-    token.atomo = S_ERRO;
-    return token;
+    texto[*posicao] = caractere;
+    (*posicao)++;
+    texto[*posicao] = '\0';
 }
 
-char *lex_token_name(TAtomo token)
+static TInfoAtomo verifica_reservada(char *texto)
 {
-    switch (token)
+    struct
     {
-    case S_PROC:
-        return "sPROC";
-    case S_FUNC:
-        return "sFUNC";
-    case S_MAIN:
-        return "sMAIN";
-    case S_START:
-        return "sSTART";
-    case S_END:
-        return "sEND";
-    case S_ECHO:
-        return "sECHO";
-    case S_GET:
-        return "sGET";
-    case S_IDENTIF:
-        return "sIDENTIF";
-    case S_CTEINT:
-        return "sCTEINT";
-    case S_STRING:
-        return "sSTRING";
-    case S_ABREPAR:
-        return "sABREPAR";
-    case S_FECHAPAR:
-        return "sFECHAPAR";
-    case S_PONTOEVIRGULA:
-        return "sPONTOEVIRGULA";
-    case S_ATRIB:
-        return "sATRIB";
-    case S_FIM:
-        return "EOF";
+        char *lexema;
+        TAtomo atomo;
+
+    } tabela[] =
+        {
+            {"proc", PROC},
+            {"func", FUNC},
+            {"start", START},
+            {"end", END},
+            {"globvars", GLOBVARS},
+            {"locvars", LOCVARS},
+            {"echo", ECHO},
+            {"get", GET},
+            {"case", CASE},
+            {"otherwise", OTHERWISE},
+            {"choose", CHOOSE},
+            {"match", MATCH},
+            {"others", OTHERS},
+            {"for", FOR},
+            {"from", FROM},
+            {"to", TO},
+            {"by", BY},
+            {"do", DO},
+            {"while", WHILE},
+            {"repeat", REPEAT},
+            {"until", UNTIL},
+            {"return", RETURN},
+            {"int", INT},
+            {"logic", LOGIC},
+            {"chr", CHR}};
+
+    int tamanho = sizeof(tabela) / sizeof(tabela[0]);
+
+    for (int i = 0; i < tamanho; i++)
+    {
+        if (strcmp(texto, tabela[i].lexema) == 0)
+            return cria_atomo(tabela[i].atomo, texto);
+    }
+
+    return cria_atomo(IDENTIFICADOR, texto);
+}
+
+TInfoAtomo proximo_atomo()
+{
+    char texto[256];
+    int posicao = 0;
+    int caractere;
+
+    while ((caractere = fgetc(arquivo_fonte)) != EOF)
+    {
+
+        if (caractere == ' ' || caractere == '\t')
+            continue;
+
+        if (caractere == '\n')
+        {
+            linha_atual++;
+            continue;
+        }
+
+        /* comentário de linha */
+        if (caractere == '#')
+        {
+            while ((caractere = fgetc(arquivo_fonte)) != '\n' && caractere != EOF)
+                ;
+
+            if (caractere == '\n')
+                linha_atual++;
+
+            continue;
+        }
+
+        /* comentário de bloco */
+        if (caractere == '/')
+        {
+            int proximo = fgetc(arquivo_fonte);
+
+            if (proximo == '#')
+            {
+                while ((caractere = fgetc(arquivo_fonte)) != EOF)
+                {
+                    if (caractere == '\n')
+                        linha_atual++;
+
+                    if (caractere == '#')
+                    {
+                        if (fgetc(arquivo_fonte) == '/')
+                            break;
+                    }
+                }
+
+                continue;
+            }
+
+            ungetc(proximo, arquivo_fonte);
+        }
+
+        /* identificadores */
+        if (isalpha(caractere) || caractere == '_')
+        {
+            adiciona_caractere(texto, &posicao, caractere);
+
+            while ((caractere = fgetc(arquivo_fonte)) != EOF &&
+                   (isalnum(caractere) || caractere == '_'))
+            {
+                adiciona_caractere(texto, &posicao, caractere);
+            }
+
+            ungetc(caractere, arquivo_fonte);
+
+            return verifica_reservada(texto);
+        }
+
+        /* números */
+        if (isdigit(caractere))
+        {
+            adiciona_caractere(texto, &posicao, caractere);
+
+            while ((caractere = fgetc(arquivo_fonte)) != EOF &&
+                   isdigit(caractere))
+            {
+                adiciona_caractere(texto, &posicao, caractere);
+            }
+
+            ungetc(caractere, arquivo_fonte);
+
+            return cria_atomo(CONSTANTE_INTEIRA, texto);
+        }
+
+        /* strings */
+        if (caractere == '"')
+        {
+            while ((caractere = fgetc(arquivo_fonte)) != '"' &&
+                   caractere != EOF)
+            {
+                adiciona_caractere(texto, &posicao, caractere);
+            }
+
+            return cria_atomo(STRING, texto);
+        }
+
+        /* caracteres */
+        if (caractere == '\'')
+        {
+            caractere = fgetc(arquivo_fonte);
+
+            adiciona_caractere(texto, &posicao, caractere);
+
+            fgetc(arquivo_fonte);
+
+            return cria_atomo(CONSTANTE_CARACTERE, texto);
+        }
+
+        switch (caractere)
+        {
+
+        case '<':
+
+            caractere = fgetc(arquivo_fonte);
+
+            if (caractere == '<')
+                return cria_atomo(ATRIBUICAO, "<<");
+
+            if (caractere == '=')
+                return cria_atomo(MENORIGUAL, "<=");
+
+            ungetc(caractere, arquivo_fonte);
+
+            return cria_atomo(MENOR, "<");
+
+        case '>':
+
+            caractere = fgetc(arquivo_fonte);
+
+            if (caractere == '=')
+                return cria_atomo(MAIORIGUAL, ">=");
+
+            ungetc(caractere, arquivo_fonte);
+
+            return cria_atomo(MAIOR, ">");
+
+        case '~':
+
+            caractere = fgetc(arquivo_fonte);
+
+            if (caractere == '=')
+                return cria_atomo(DIFERENTE, "~=");
+
+            ungetc(caractere, arquivo_fonte);
+
+            return cria_atomo(NEGACAO, "~");
+
+        case '+':
+            return cria_atomo(SOMA, "+");
+
+        case '-':
+            return cria_atomo(SUBTRACAO, "-");
+
+        case '*':
+            return cria_atomo(MULTIPLICACAO, "*");
+
+        case '/':
+            return cria_atomo(DIVISAO, "/");
+
+        case '=':
+            return cria_atomo(IGUAL, "=");
+
+        case '&':
+            return cria_atomo(E_LOGICO, "&");
+
+        case '|':
+            return cria_atomo(OU_LOGICO, "|");
+
+        case '(':
+            return cria_atomo(ABREPARENTESES, "(");
+
+        case ')':
+            return cria_atomo(FECHAPARENTESES, ")");
+
+        case '[':
+            return cria_atomo(ABRECOLCHETE, "[");
+
+        case ']':
+            return cria_atomo(FECHACOLCHETE, "]");
+
+        case ',':
+            return cria_atomo(VIRGULA, ",");
+
+        case ';':
+            return cria_atomo(PONTOEVIRGULA, ";");
+
+        case ':':
+            return cria_atomo(DOISPONTOS, ":");
+        }
+
+        texto[0] = caractere;
+        texto[1] = '\0';
+
+        return cria_atomo(ERRO, texto);
+    }
+
+    return cria_atomo(FIMARQUIVO, "EOF");
+}
+
+char *nome_atomo(TAtomo atomo)
+{
+    switch (atomo)
+    {
+    case IDENTIFICADOR:
+        return "IDENTIFICADOR";
+
+    case CONSTANTE_INTEIRA:
+        return "CONSTANTE_INTEIRA";
+
+    case CONSTANTE_CARACTERE:
+        return "CONSTANTE_CARACTERE";
+
+    case STRING:
+        return "STRING";
+
+    case PROC:
+        return "PROC";
+
+    case FUNC:
+        return "FUNC";
+
+    case START:
+        return "START";
+
+    case END:
+        return "END";
+
+    case GLOBVARS:
+        return "GLOBVARS";
+
+    case LOCVARS:
+        return "LOCVARS";
+
+    case ECHO:
+        return "ECHO";
+
+    case GET:
+        return "GET";
+
+    case CASE:
+        return "CASE";
+
+    case OTHERWISE:
+        return "OTHERWISE";
+
+    case CHOOSE:
+        return "CHOOSE";
+
+    case MATCH:
+        return "MATCH";
+
+    case OTHERS:
+        return "OTHERS";
+
+    case ATRIBUICAO:
+        return "ATRIBUICAO";
+
+    case SOMA:
+        return "SOMA";
+
+    case SUBTRACAO:
+        return "SUBTRACAO";
+
+    case MULTIPLICACAO:
+        return "MULTIPLICACAO";
+
+    case DIVISAO:
+        return "DIVISAO";
+
+    case IGUAL:
+        return "IGUAL";
+
+    case DIFERENTE:
+        return "DIFERENTE";
+
+    case MAIOR:
+        return "MAIOR";
+
+    case MENOR:
+        return "MENOR";
+
+    case MAIORIGUAL:
+        return "MAIORIGUAL";
+
+    case MENORIGUAL:
+        return "MENORIGUAL";
+
+    case E_LOGICO:
+        return "E_LOGICO";
+
+    case OU_LOGICO:
+        return "OU_LOGICO";
+
+    case NEGACAO:
+        return "NEGACAO";
+
+    case ABREPARENTESES:
+        return "ABREPARENTESES";
+
+    case FECHAPARENTESES:
+        return "FECHAPARENTESES";
+
+    case ABRECOLCHETE:
+        return "ABRECOLCHETE";
+
+    case FECHACOLCHETE:
+        return "FECHACOLCHETE";
+
+    case VIRGULA:
+        return "VIRGULA";
+
+    case PONTOEVIRGULA:
+        return "PONTOEVIRGULA";
+
+    case DOISPONTOS:
+        return "DOISPONTOS";
+
+    case ERRO:
+        return "ERRO";
+
+    case FIMARQUIVO:
+        return "FIMARQUIVO";
+
     default:
-        return "TOKEN";
+        return "DESCONHECIDO";
     }
 }

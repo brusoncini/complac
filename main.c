@@ -1,30 +1,47 @@
-#include "lex.h"
-
 #include <stdio.h>
+
+#include "lex.h"
 
 int main(int argc, char **argv)
 {
+
+    /*
+    ===============================
+        TESTE ANALISADOR LÉXICO
+    ===============================
+    */
+
     if (argc < 2)
     {
         printf("Uso: %s arquivo.slac\n", argv[0]);
         return 1;
     }
 
-    lex_init(argv[1]);
+    FILE *arquivo = fopen(argv[1], "r");
 
-    TInfoAtomo token;
+    if (arquivo == NULL)
+    {
+        printf("Erro ao abrir arquivo\n");
+        return 1;
+    }
+
+    inicializa_lex(arquivo);
+
+    TInfoAtomo atomo;
 
     do
     {
-        token = lex_next();
+        atomo = proximo_atomo();
 
         printf(
-            "%d <%s> \"%s\"\n",
-            token.linha,
-            lex_token_name(token.atomo),
-            token.lexema);
+            "%d | %-25s | %s\n",
+            atomo.linha,
+            nome_atomo(atomo.atomo),
+            atomo.texto);
 
-    } while (token.atomo != S_FIM);
+    } while (atomo.atomo != FIMARQUIVO);
+
+    fclose(arquivo);
 
     return 0;
 }

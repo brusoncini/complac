@@ -6,9 +6,8 @@
 *.o
 *.obj
 complac
-salc
+slac
 slac2
-
 
 # =========================
 # Arquivos temporários
@@ -29,6 +28,7 @@ slac2
 # =========================
 # Arquivos de teste gerados
 # =========================
+teste.slac
 *.slac~
 *.bak
 

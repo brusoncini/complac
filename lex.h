@@ -1,78 +1,77 @@
 #ifndef LEX_H
 #define LEX_H
 
-#define TAM_LEXEMA 256
+#include <stdio.h>
 
 typedef enum
 {
-
-    S_PROC,
-    S_FUNC,
-    S_MAIN,
-    S_GLOBVARS,
-    S_LOCVARS,
-    S_START,
-    S_END,
-    S_ECHO,
-    S_GET,
-    S_CASE,
-    S_OTHERWISE,
-    S_CHOOSE,
-    S_MATCH,
-    S_OTHERS,
-    S_FOR,
-    S_FROM,
-    S_TO,
-    S_BY,
-    S_WHILE,
-    S_REPEAT,
-    S_UNTIL,
-    S_RETURN,
-    S_INT,
-    S_LOGIC,
-    S_CHR,
-    S_IDENTIF,
-    S_CTEINT,
-    S_STRING,
-    S_CTECHAR,
-    S_ATRIB,
-    S_SOMA,
-    S_SUBRAT,
-    S_MULT,
-    S_DIV,
-    S_IGUAL,
-    S_DIFERENTE,
-    S_MAIOR,
-    S_MENOR,
-    S_MAIORIGUAL,
-    S_MENORIGUAL,
-    S_AND,
-    S_OR,
-    S_NEG,
-    S_ABREPAR,
-    S_FECHAPAR,
-    S_ABRECOL,
-    S_FECHACOL,
-    S_VIRGULA,
-    S_PONTOEVIRGULA,
-    S_DOISPONTOS,
-    S_ERRO,
-    S_FIM
-
+    IDENTIFICADOR,
+    CONSTANTE_INTEIRA,
+    CONSTANTE_CARACTERE,
+    STRING,
+    PROC,
+    FUNC,
+    START,
+    END,
+    GLOBVARS,
+    LOCVARS,
+    ECHO,
+    GET,
+    CASE,
+    OTHERWISE,
+    CHOOSE,
+    MATCH,
+    OTHERS,
+    FOR,
+    FROM,
+    TO,
+    BY,
+    DO,
+    WHILE,
+    REPEAT,
+    UNTIL,
+    RETURN,
+    INT,
+    LOGIC,
+    CHR,
+    ATRIBUICAO,
+    SOMA,
+    SUBTRACAO,
+    MULTIPLICACAO,
+    DIVISAO,
+    IGUAL,
+    DIFERENTE,
+    MAIOR,
+    MENOR,
+    MAIORIGUAL,
+    MENORIGUAL,
+    E_LOGICO,
+    OU_LOGICO,
+    NEGACAO,
+    ABREPARENTESES,
+    FECHAPARENTESES,
+    ABRECOLCHETE,
+    FECHACOLCHETE,
+    VIRGULA,
+    PONTOEVIRGULA,
+    DOISPONTOS,
+    ERRO,
+    FIMARQUIVO
+    
 } TAtomo;
 
 typedef struct
 {
     TAtomo atomo;
-    char lexema[TAM_LEXEMA];
+    char texto[256];
     int linha;
 
 } TInfoAtomo;
 
-void lex_init(char *nomeArquivo);
+void inicializa_lex(FILE *arquivo);
 
-TInfoAtomo lex_next();
+TInfoAtomo proximo_atomo();
 
-char *lex_token_name(TAtomo token);
+char *nome_atomo(TAtomo atomo);
 
 #endif
