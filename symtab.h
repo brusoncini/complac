@@ -1,6 +1,8 @@
 #ifndef SYMTAB_H
 #define SYMTAB_H
 
+#include <stdio.h>
+
 #define TAM_TABELA 211
 #define TAM_NOME 256
 
@@ -46,12 +48,15 @@ typedef struct Simbolo
     char contexto[TAM_NOME];
 
     struct Simbolo *proximo;
+    struct Simbolo *ordem_proximo;
 
 } TSimbolo;
 
 typedef struct
 {
     TSimbolo *tabela[TAM_TABELA];
+    TSimbolo *primeiro;
+    TSimbolo *ultimo;
 
 } TabelaSimbolos;
 
@@ -88,6 +93,7 @@ TSimbolo *busca_simbolo_contexto(
     const char *contexto);
 
 void imprime_tabela(TabelaSimbolos *tabela);
+void grava_tabela_log(TabelaSimbolos *tabela, FILE *arquivo);
 
 char *nome_tipo(TTipo tipo);
 

@@ -1,90 +1,163 @@
 #include <stdio.h>
-#include "lex.h"
-#include "symtab.h"
-#include "parser.h"
+#include <stdlib.h>
+#include <string.h>
 
-static void teste_lexer(void)
+#include "lex.h"
+#include "parser.h"
+#include "symtab.h"
+#include "opts.h"
+#include "diag.h"
+
+static const char *categoria_log(TAtomo atomo)
 {
-    char arquivo_nome[256];
-    printf("Arquivo .slac: ");
-    scanf("%255s", arquivo_nome);
-    FILE *arquivo = fopen(arquivo_nome, "r");
-    if (arquivo == NULL)
+    switch (atomo)
     {
-        printf("Erro ao abrir arquivo.\n");
-        return;
+    case IDENTIFICADOR: return "sIDENTIF";
+    case CONSTANTE_INTEIRA: return "sCTEINT";
+    case CONSTANTE_CARACTERE: return "sCTECHAR";
+    case STRING: return "sSTRING";
+    case PROC: return "sPROC";
+    case FUNC: return "sFUNC";
+    case START: return "sSTART";
+    case END: return "sEND";
+    case GLOBVARS: return "sGLOBVARS";
+    case LOCVARS: return "sLOCVARS";
+    case KIND: return "sKIND";
+    case REF: return "sREF";
+    case ECHO: return "sECHO";
+    case GET: return "sGET";
+    case CASE: return "sCASE";
+    case OTHERWISE: return "sOTHERWISE";
+    case CHOOSE: return "sCHOOSE";
+    case MATCH: return "sMATCH";
+    case OTHERS: return "sOTHERS";
+    case FOR: return "sFOR";
+    case FROM: return "sFROM";
+    case TO: return "sTO";
+    case BY: return "sBY";
+    case DO: return "sDO";
+    case WHILE: return "sWHILE";
+    case REPEAT: return "sREPEAT";
+    case UNTIL: return "sUNTIL";
+    case RETURN: return "sRETURN";
+    case INT: return "sINT";
+    case LOGIC: return "sLOGIC";
+    case CHR: return "sCHR";
+    case ATRIBUICAO: return "sATRIB";
+    case SOMA: return "sSOMA";
+    case SUBTRACAO: return "sSUBRAT";
+    case MULTIPLICACAO: return "sMULT";
+    case DIVISAO: return "sDIV";
+    case IGUAL: return "sIGUAL";
+    case DIFERENTE: return "sDIFERENTE";
+    case MAIOR: return "sMAIOR";
+    case MENOR: return "sMENOR";
+    case MAIORIGUAL: return "sMAIORIGUAL";
+    case MENORIGUAL: return "sMENORIGUAL";
+    case E_LOGICO: return "sAND";
+    case OU_LOGICO: return "sOR";
+    case NEGACAO: return "sNEG";
+    case IMPLIC: return "sIMPLIC";
+    case ABREPARENTESES: return "sABREPAREN";
+    case FECHAPARENTESES: return "sFECHAPAREN";
+    case ABRECOLCHETE: return "sABRECOLCH";
+    case FECHACOLCHETE: return "sFECHACOLCH";
+    case VIRGULA: return "sVIRGULA";
+    case PONTOEVIRGULA: return "sPONTOVIRG";
+    case DOISPONTOS: return "sDOISPONTOS";
+    case ERRO: return "sERRO";
+    case FIMARQUIVO: return "sEOF";
+    default: return "sDESCONHECIDO";
     }
-    inicializa_lex(arquivo);
+}
+
+static void nome_log(const char *fonte, const char *ext, char *saida, size_t tamanho)
+{
+    snprintf(saida, tamanho, "%s", fonte);
+    char *ponto = strrchr(saida, '.');
+    if (ponto != NULL) *ponto = '\0';
+    strncat(saida, ext, tamanho - strlen(saida) - 1);
+}
+
+static int grava_tokens(const char *fonte)
+{
+    FILE *entrada = fopen(fonte, "r");
+    char log_nome[512];
+    nome_log(fonte, ".tk", log_nome, sizeof(log_nome));
+    FILE *saida = fopen(log_nome, "w");
+    if (entrada == NULL || saida == NULL)
+    {
+        if (entrada) fclose(entrada);
+        if (saida) fclose(saida);
+        fprintf(stderr, "Erro ao criar log de tokens.\n");
+        return 0;
+    }
+
+    inicializa_lex(entrada);
     TInfoAtomo atomo;
     do
     {
         atomo = proximo_atomo();
-        printf("%d | %-25s | %s\n", atomo.linha, nome_atomo(atomo.atomo), atomo.texto);
+        fprintf(saida, "%d %s \"%s\"\n", atomo.linha,
+                categoria_log(atomo.atomo), atomo.texto);
     } while (atomo.atomo != FIMARQUIVO);
-    fclose(arquivo);
+
+    fclose(entrada);
+    fclose(saida);
+    printf("Log de tokens: %s\n", log_nome);
+    return 1;
 }
 
-static void teste_tabela_simbolos(void)
+int main(int argc, char **argv)
 {
-    TabelaSimbolos tabela;
-    inicializa_tabela(&tabela);
-    insere_simbolo(&tabela, "idade", VARIAVEL, TIPO_INT, GLOBAL);
-    insere_simbolo(&tabela, "nome", VARIAVEL, TIPO_CHR, LOCAL);
-    insere_simbolo(&tabela, "soma", SUBROTINA, TIPO_INT, GLOBAL);
-    imprime_tabela(&tabela);
-}
+    TOpcoes opcoes;
+    if (!opts_parse(argc, argv, &opcoes))
+        return 1;
 
-static void teste_parser(void)
-{
-    char arquivo_nome[256];
-    printf("Arquivo .slac: ");
-    scanf("%255s", arquivo_nome);
-    if (analisa_sintaxe(arquivo_nome))
-        printf("Programa valido.\n");
-    else
-        printf("Programa invalido.\n");
-}
+    diag_init();
 
-static void teste_parser_tabela(void)
-{
-    char arquivo_nome[256];
-    printf("Arquivo .slac: ");
-    scanf("%255s", arquivo_nome);
+    FILE *trace = NULL;
+    char log_nome[512];
 
-    if (analisa_sintaxe(arquivo_nome))
+    if (opcoes.opcao == OPCAO_TOKENS)
+        grava_tokens(opcoes.arquivo);
+
+    if (opcoes.opcao == OPCAO_TRACE)
     {
-        printf("Programa valido.\n");
-        imprime_tabela(obtem_tabela_parser());
-    }
-    else
-    {
-        printf("Programa invalido.\n");
-    }
-}
-
-int main(void)
-{
-    int opcao;
-    do
-    {
-        printf("\n===== COMPLAC =====\n");
-        printf("1 - Testar analisador lexico\n");
-        printf("2 - Testar tabela de simbolos\n");
-        printf("3 - Testar analise sintatica e semantica\n");
-        printf("4 - Testar parser + tabela de simbolos\n");
-        printf("0 - Sair\n");
-        printf("\nOpcao: ");
-        scanf("%d", &opcao);
-
-        switch (opcao)
+        nome_log(opcoes.arquivo, ".trc", log_nome, sizeof(log_nome));
+        trace = fopen(log_nome, "w");
+        if (trace == NULL)
         {
-        case 1: teste_lexer(); break;
-        case 2: teste_tabela_simbolos(); break;
-        case 3: teste_parser(); break;
-        case 4: teste_parser_tabela(); break;
-        case 0: printf("Encerrando...\n"); break;
-        default: printf("Opcao invalida.\n");
+            fprintf(stderr, "Erro ao criar log de rastreamento.\n");
+            return 1;
         }
-    } while (opcao != 0);
-    return 0;
+        diag_set_trace(trace);
+    }
+
+    int sucesso = analisa_sintaxe(opcoes.arquivo);
+
+    if (opcoes.opcao == OPCAO_SYMTAB)
+    {
+        nome_log(opcoes.arquivo, ".ts", log_nome, sizeof(log_nome));
+        FILE *saida = fopen(log_nome, "w");
+        if (saida == NULL)
+        {
+            fprintf(stderr, "Erro ao criar tabela de simbolos.\n");
+            sucesso = 0;
+        }
+        else
+        {
+            grava_tabela_log(obtem_tabela_parser(), saida);
+            fclose(saida);
+            printf("Log da tabela de simbolos: %s\n", log_nome);
+        }
+    }
+
+    if (trace != NULL)
+    {
+        fclose(trace);
+        printf("Log de rastreamento: %s\n", log_nome);
+    }
+
+    return sucesso ? 0 : 1;
 }

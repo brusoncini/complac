@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "semantic.h"
+#include "diag.h"
 
 static int erros_semanticos;
 
@@ -11,7 +12,7 @@ void inicializa_semantica(void)
 
 void erro_semantico(int linha, const char *mensagem, const char *lexema)
 {
-    fprintf(stderr, "Erro semantico na linha %d: %s (%s)\n", linha, mensagem, lexema);
+    diag_error(linha, "semantico", mensagem, lexema);
     erros_semanticos++;
 }
 

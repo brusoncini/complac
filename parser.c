@@ -5,6 +5,7 @@
 #include "parser.h"
 #include "symtab.h"
 #include "semantic.h"
+#include "diag.h"
 
 static FILE *arquivo_parser;
 static TInfoAtomo atual, proximo;
@@ -22,8 +23,10 @@ static void avanca(void)
 
 static void erro(const char *esperado)
 {
-    fprintf(stderr, "Erro sintatico na linha %d: esperado %s, encontrado %s (%s)\n",
-            atual.linha, esperado, nome_atomo(atual.atomo), atual.texto);
+    char mensagem[512];
+    snprintf(mensagem, sizeof(mensagem), "esperado %s, encontrado %s (%s)",
+             esperado, nome_atomo(atual.atomo), atual.texto);
+    diag_error(atual.linha, "sintatico", mensagem, NULL);
     erros++;
 }
 
@@ -654,10 +657,11 @@ static int parse_princ(void)
 
 int analisa_sintaxe(const char *nome_arquivo)
 {
+    diag_trace("ENTRA", "prg", 1);
     arquivo_parser = fopen(nome_arquivo, "r");
     if (arquivo_parser == NULL)
     {
-        fprintf(stderr, "Erro ao abrir arquivo: %s\n", nome_arquivo);
+        diag_error(0, "arquivo", "nao foi possivel abrir o arquivo", nome_arquivo);
         return 0;
     }
 
@@ -671,16 +675,27 @@ int analisa_sintaxe(const char *nome_arquivo)
     tipo_retorno = TIPO_VOID;
     strcpy(contexto_atual, "global");
 
-    if (!parse_gvars() || !parse_subs() || !parse_princ())
+    diag_trace("ENTRA", "gvars", atual.linha);
+    if (!parse_gvars()) { diag_trace("SAI", "gvars", atual.linha); fclose(arquivo_parser); return 0; }
+    diag_trace("SAI", "gvars", atual.linha);
+    diag_trace("ENTRA", "subs", atual.linha);
+    if (!parse_subs()) { diag_trace("SAI", "subs", atual.linha); fclose(arquivo_parser); return 0; }
+    diag_trace("SAI", "subs", atual.linha);
+    diag_trace("ENTRA", "princ", atual.linha);
+    if (!parse_princ())
     {
         fclose(arquivo_parser);
+        diag_trace("SAI", "princ", atual.linha);
+        diag_trace("SAI", "prg", atual.linha);
         return 0;
     }
+    diag_trace("SAI", "princ", atual.linha);
 
     if (!eh(FIMARQUIVO))
     {
         erro("fim do arquivo");
         fclose(arquivo_parser);
+        diag_trace("SAI", "prg", atual.linha);
         return 0;
     }
 
@@ -688,10 +703,12 @@ int analisa_sintaxe(const char *nome_arquivo)
 
     if (erros == 0 && sem_erro())
     {
-        printf("Analise sintatica concluida com sucesso.\n");
-        printf("Analise semantica concluida com sucesso.\n");
+        diag_info("Analise sintatica concluida com sucesso.");
+        diag_info("Analise semantica concluida com sucesso.");
+        diag_trace("SAI", "prg", atual.linha);
         return 1;
     }
+    diag_trace("SAI", "prg", atual.linha);
     return 0;
 }
 

@@ -21,6 +21,8 @@ void inicializa_tabela(TabelaSimbolos *tabela)
 {
     for (int i = 0; i < TAM_TABELA; i++)
         tabela->tabela[i] = NULL;
+    tabela->primeiro = NULL;
+    tabela->ultimo = NULL;
 }
 
 int insere_simbolo(
@@ -63,8 +65,16 @@ int insere_simbolo_contexto(
     novo->tamanho_vetor = 0;
     novo->quantidade_parametros = 0;
     strcpy(novo->contexto, contexto);
+    novo->ordem_proximo = NULL;
     novo->proximo = tabela->tabela[posicao];
     tabela->tabela[posicao] = novo;
+
+    if (tabela->primeiro == NULL)
+        tabela->primeiro = novo;
+    else
+        tabela->ultimo->ordem_proximo = novo;
+    tabela->ultimo = novo;
+
     return 1;
 }
 
@@ -117,6 +127,34 @@ void imprime_tabela(TabelaSimbolos *tabela)
 
             atual = atual->proximo;
         }
+    }
+}
+
+
+void grava_tabela_log(TabelaSimbolos *tabela, FILE *arquivo)
+{
+    TSimbolo *atual = tabela->primeiro;
+    while (atual != NULL)
+    {
+        if (atual->escopo == GLOBAL)
+            fprintf(arquivo, "SCOPE=global ");
+        else if (atual->escopo == PARAMETRO)
+            fprintf(arquivo, "SCOPE=proc:%s.params ", atual->contexto);
+        else
+            fprintf(arquivo, "SCOPE=proc:%s.locals ", atual->contexto);
+
+        fprintf(arquivo, "id=\"%s\" cat=%s tipo=%s extra=",
+                atual->lexema, nome_categoria(atual->categoria), nome_tipo(atual->tipo));
+
+        if (atual->tamanho_vetor > 0)
+            fprintf(arquivo, "VETOR=%d", atual->tamanho_vetor);
+        else if (atual->quantidade_parametros > 0)
+            fprintf(arquivo, "PARAMETROS=%d", atual->quantidade_parametros);
+        else
+            fprintf(arquivo, "-");
+
+        fprintf(arquivo, "\n");
+        atual = atual->ordem_proximo;
     }
 }
 
