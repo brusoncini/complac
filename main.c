@@ -70,7 +70,7 @@ int main(void)
         printf("\n===== COMPLAC =====\n");
         printf("1 - Testar analisador lexico\n");
         printf("2 - Testar tabela de simbolos\n");
-        printf("3 - Testar analisador sintatico\n");
+        printf("3 - Testar analise sintatica e semantica\n");
         printf("4 - Testar parser + tabela de simbolos\n");
         printf("0 - Sair\n");
         printf("\nOpcao: ");

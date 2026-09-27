@@ -30,24 +30,41 @@ int insere_simbolo(
     TTipo tipo,
     TEscopo escopo)
 {
+    return insere_simbolo_contexto(tabela, lexema, categoria, tipo, escopo, "global");
+}
+
+int insere_simbolo_contexto(
+    TabelaSimbolos *tabela,
+    char *lexema,
+    TCategoriaSimbolo categoria,
+    TTipo tipo,
+    TEscopo escopo,
+    const char *contexto)
+{
     int posicao = hash(lexema);
+    TSimbolo *existente = tabela->tabela[posicao];
+
+    while (existente != NULL)
+    {
+        if (strcmp(existente->lexema, lexema) == 0 &&
+            existente->escopo == escopo &&
+            strcmp(existente->contexto, contexto) == 0)
+            return 0;
+        existente = existente->proximo;
+    }
 
     TSimbolo *novo = malloc(sizeof(TSimbolo));
-
-    if (novo == NULL)
-        return 0;
+    if (novo == NULL) return 0;
 
     strcpy(novo->lexema, lexema);
-
     novo->categoria = categoria;
     novo->tipo = tipo;
     novo->escopo = escopo;
     novo->tamanho_vetor = 0;
     novo->quantidade_parametros = 0;
+    strcpy(novo->contexto, contexto);
     novo->proximo = tabela->tabela[posicao];
-
     tabela->tabela[posicao] = novo;
-
     return 1;
 }
 
@@ -116,6 +133,9 @@ char *nome_tipo(TTipo tipo)
     case TIPO_CHR:
         return "CHR";
 
+    case TIPO_STRING:
+        return "STRING";
+
     case TIPO_VOID:
         return "VOID";
 
@@ -155,4 +175,40 @@ char *nome_escopo(TEscopo escopo)
     default:
         return "OUTRO";
     }
+}
+TSimbolo *busca_simbolo_escopo(
+    TabelaSimbolos *tabela,
+    char *lexema,
+    TEscopo escopo)
+{
+    int posicao = hash(lexema);
+    TSimbolo *atual = tabela->tabela[posicao];
+
+    while (atual != NULL)
+    {
+        if (strcmp(atual->lexema, lexema) == 0 && atual->escopo == escopo)
+            return atual;
+        atual = atual->proximo;
+    }
+
+    return NULL;
+}
+
+TSimbolo *busca_simbolo_contexto(
+    TabelaSimbolos *tabela,
+    const char *lexema,
+    TEscopo escopo,
+    const char *contexto)
+{
+    int posicao = hash((char *)lexema);
+    TSimbolo *atual = tabela->tabela[posicao];
+    while (atual != NULL)
+    {
+        if (strcmp(atual->lexema, lexema) == 0 &&
+            atual->escopo == escopo &&
+            strcmp(atual->contexto, contexto) == 0)
+            return atual;
+        atual = atual->proximo;
+    }
+    return NULL;
 }

@@ -24,6 +24,7 @@ typedef enum
     TIPO_INT,
     TIPO_LOGIC,
     TIPO_CHR,
+    TIPO_STRING,
     TIPO_VOID,
     TIPO_NAO_DEFINIDO
 
@@ -42,6 +43,7 @@ typedef struct Simbolo
     int tamanho_vetor;
 
     int quantidade_parametros;
+    char contexto[TAM_NOME];
 
     struct Simbolo *proximo;
 
@@ -62,9 +64,28 @@ int insere_simbolo(
     TTipo tipo,
     TEscopo escopo);
 
+int insere_simbolo_contexto(
+    TabelaSimbolos *tabela,
+    char *lexema,
+    TCategoriaSimbolo categoria,
+    TTipo tipo,
+    TEscopo escopo,
+    const char *contexto);
+
 TSimbolo *busca_simbolo(
     TabelaSimbolos *tabela,
     char *lexema);
+
+TSimbolo *busca_simbolo_escopo(
+    TabelaSimbolos *tabela,
+    char *lexema,
+    TEscopo escopo);
+
+TSimbolo *busca_simbolo_contexto(
+    TabelaSimbolos *tabela,
+    const char *lexema,
+    TEscopo escopo,
+    const char *contexto);
 
 void imprime_tabela(TabelaSimbolos *tabela);
 
