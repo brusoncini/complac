@@ -45,6 +45,23 @@ static void teste_parser(void)
         printf("Programa invalido.\n");
 }
 
+static void teste_parser_tabela(void)
+{
+    char arquivo_nome[256];
+    printf("Arquivo .slac: ");
+    scanf("%255s", arquivo_nome);
+
+    if (analisa_sintaxe(arquivo_nome))
+    {
+        printf("Programa valido.\n");
+        imprime_tabela(obtem_tabela_parser());
+    }
+    else
+    {
+        printf("Programa invalido.\n");
+    }
+}
+
 int main(void)
 {
     int opcao;
@@ -54,6 +71,7 @@ int main(void)
         printf("1 - Testar analisador lexico\n");
         printf("2 - Testar tabela de simbolos\n");
         printf("3 - Testar analisador sintatico\n");
+        printf("4 - Testar parser + tabela de simbolos\n");
         printf("0 - Sair\n");
         printf("\nOpcao: ");
         scanf("%d", &opcao);
@@ -63,6 +81,7 @@ int main(void)
         case 1: teste_lexer(); break;
         case 2: teste_tabela_simbolos(); break;
         case 3: teste_parser(); break;
+        case 4: teste_parser_tabela(); break;
         case 0: printf("Encerrando...\n"); break;
         default: printf("Opcao invalida.\n");
         }

@@ -6,11 +6,11 @@
 
 static int hash(char *lexema)
 {
-    int valor = 0;
+    unsigned int valor = 0;
 
     while (*lexema)
     {
-        valor = valor * 31 + *lexema;
+        valor = valor * 31u + (unsigned char)*lexema;
         lexema++;
     }
 
@@ -84,11 +84,19 @@ void imprime_tabela(TabelaSimbolos *tabela)
         {
 
             printf(
-                "%-15s | %-12s | %-10s | %-10s\n",
+                "%-15s | %-12s | %-10s | %-10s",
                 atual->lexema,
                 nome_categoria(atual->categoria),
                 nome_tipo(atual->tipo),
                 nome_escopo(atual->escopo));
+
+            if (atual->tamanho_vetor > 0)
+                printf(" | VETOR=%d", atual->tamanho_vetor);
+
+            if (atual->quantidade_parametros > 0)
+                printf(" | PARAMETROS=%d", atual->quantidade_parametros);
+
+            printf("\n");
 
             atual = atual->proximo;
         }

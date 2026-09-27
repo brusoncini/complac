@@ -3,11 +3,13 @@
 #include <string.h>
 #include "lex.h"
 #include "parser.h"
+#include "symtab.h"
 
 static FILE *arquivo_parser;
 static TInfoAtomo atual;
 static TInfoAtomo proximo;
 static int erros;
+static TabelaSimbolos tabela_parser;
 
 static void avanca(void)
 {
@@ -56,41 +58,93 @@ static int parse_cmd(void);
 static int parse_bco(void);
 static int parse_elem(void);
 
-static int parse_tipo(void)
+static int parse_tipo(TTipo *tipo, int *tamanho_vetor)
 {
-    if (aceita(INT) || aceita(LOGIC) || aceita(CHR))
+    *tamanho_vetor = 0;
+
+    if (aceita(INT))
+        *tipo = TIPO_INT;
+    else if (aceita(LOGIC))
+        *tipo = TIPO_LOGIC;
+    else if (aceita(CHR))
+        *tipo = TIPO_CHR;
+    else
     {
-        if (aceita(ABRECOLCHETE))
-        {
-            if (!espera(CONSTANTE_INTEIRA, "constante inteira"))
-                return 0;
-            if (!espera(FECHACOLCHETE, "]"))
-                return 0;
-        }
-        return 1;
+        erro("tipo");
+        return 0;
     }
-    erro("tipo");
-    return 0;
+
+    if (aceita(ABRECOLCHETE))
+    {
+        if (!eh(CONSTANTE_INTEIRA))
+        {
+            erro("constante inteira");
+            return 0;
+        }
+
+        *tamanho_vetor = atoi(atual.texto);
+        avanca();
+
+        if (!espera(FECHACOLCHETE, "]"))
+            return 0;
+    }
+
+    return 1;
 }
 
-static int parse_decls(void)
+static int parse_decls(TEscopo escopo)
 {
-    if (!espera(IDENTIFICADOR, "identificador"))
+    char nomes[32][TAM_NOME];
+    int quantidade = 0;
+
+    if (!eh(IDENTIFICADOR))
+    {
+        erro("identificador");
         return 0;
+    }
+
+    strcpy(nomes[quantidade++], atual.texto);
+    avanca();
 
     while (aceita(VIRGULA))
     {
-        if (!espera(IDENTIFICADOR, "identificador"))
+        if (!eh(IDENTIFICADOR))
+        {
+            erro("identificador");
             return 0;
+        }
+
+        if (quantidade < 32)
+            strcpy(nomes[quantidade++], atual.texto);
+        avanca();
     }
 
     if (!espera(KIND, "is"))
         return 0;
 
-    if (!parse_tipo())
+    TTipo tipo;
+    int tamanho_vetor;
+
+    if (!parse_tipo(&tipo, &tamanho_vetor))
         return 0;
 
-    return espera(PONTOEVIRGULA, ";");
+    if (!espera(PONTOEVIRGULA, ";"))
+        return 0;
+
+    for (int i = 0; i < quantidade; i++)
+    {
+        if (!insere_simbolo(&tabela_parser, nomes[i], VARIAVEL, tipo, escopo))
+            return 0;
+
+        if (tamanho_vetor > 0)
+        {
+            TSimbolo *simbolo = busca_simbolo(&tabela_parser, nomes[i]);
+            if (simbolo != NULL)
+                simbolo->tamanho_vetor = tamanho_vetor;
+        }
+    }
+
+    return 1;
 }
 
 static int parse_gvars(void)
@@ -106,7 +160,7 @@ static int parse_gvars(void)
 
     do
     {
-        if (!parse_decls())
+        if (!parse_decls(GLOBAL))
             return 0;
     } while (eh(IDENTIFICADOR));
 
@@ -126,7 +180,7 @@ static int parse_lvars(void)
 
     do
     {
-        if (!parse_decls())
+        if (!parse_decls(LOCAL))
             return 0;
     } while (eh(IDENTIFICADOR));
 
@@ -135,26 +189,53 @@ static int parse_lvars(void)
 
 static int parse_param(void)
 {
-    aceita(REF);
-    if (!espera(IDENTIFICADOR, "identificador"))
+    int por_ref = aceita(REF);
+    (void)por_ref;
+
+    if (!eh(IDENTIFICADOR))
+    {
+        erro("identificador");
         return 0;
+    }
+
+    char nome[TAM_NOME];
+    strcpy(nome, atual.texto);
+    avanca();
+
     if (!espera(DOISPONTOS, ":"))
         return 0;
-    return parse_tipo();
+
+    TTipo tipo;
+    int tamanho_vetor;
+
+    if (!parse_tipo(&tipo, &tamanho_vetor))
+        return 0;
+
+    if (!insere_simbolo(&tabela_parser, nome, VARIAVEL, tipo, PARAMETRO))
+        return 0;
+
+    TSimbolo *simbolo = busca_simbolo(&tabela_parser, nome);
+    if (simbolo != NULL && tamanho_vetor > 0)
+        simbolo->tamanho_vetor = tamanho_vetor;
+
+    return 1;
 }
 
-static int parse_params(void)
+static int parse_params(int *quantidade)
 {
+    *quantidade = 0;
     if (!eh(IDENTIFICADOR) && !eh(REF))
         return 1;
 
     if (!parse_param())
         return 0;
+    (*quantidade)++;
 
     while (aceita(VIRGULA))
     {
         if (!parse_param())
             return 0;
+        (*quantidade)++;
     }
     return 1;
 }
@@ -528,14 +609,32 @@ static int parse_proc(void)
 {
     if (!espera(PROC, "proc"))
         return 0;
-    if (!espera(IDENTIFICADOR, "identificador"))
+    if (!eh(IDENTIFICADOR))
+    {
+        erro("identificador");
         return 0;
+    }
+
+    char nome[TAM_NOME];
+    strcpy(nome, atual.texto);
+    avanca();
+
     if (!espera(ABREPARENTESES, "("))
         return 0;
-    if (!parse_params())
+
+    int quantidade_parametros;
+    if (!parse_params(&quantidade_parametros))
         return 0;
     if (!espera(FECHAPARENTESES, ")"))
         return 0;
+
+    if (!insere_simbolo(&tabela_parser, nome, SUBROTINA, TIPO_VOID, GLOBAL))
+        return 0;
+
+    TSimbolo *simbolo = busca_simbolo(&tabela_parser, nome);
+    if (simbolo != NULL)
+        simbolo->quantidade_parametros = quantidade_parametros;
+
     if (!parse_lvars())
         return 0;
     return parse_bco();
@@ -545,18 +644,39 @@ static int parse_func(void)
 {
     if (!espera(FUNC, "func"))
         return 0;
-    if (!espera(IDENTIFICADOR, "identificador"))
+    if (!eh(IDENTIFICADOR))
+    {
+        erro("identificador");
         return 0;
+    }
+
+    char nome[TAM_NOME];
+    strcpy(nome, atual.texto);
+    avanca();
+
     if (!espera(ABREPARENTESES, "("))
         return 0;
-    if (!parse_params())
+
+    int quantidade_parametros;
+    if (!parse_params(&quantidade_parametros))
         return 0;
     if (!espera(FECHAPARENTESES, ")"))
         return 0;
     if (!espera(DOISPONTOS, ":"))
         return 0;
-    if (!parse_tipo())
+
+    TTipo tipo;
+    int tamanho_vetor;
+    if (!parse_tipo(&tipo, &tamanho_vetor))
         return 0;
+
+    if (!insere_simbolo(&tabela_parser, nome, SUBROTINA, tipo, GLOBAL))
+        return 0;
+
+    TSimbolo *simbolo = busca_simbolo(&tabela_parser, nome);
+    if (simbolo != NULL)
+        simbolo->quantidade_parametros = quantidade_parametros;
+
     if (!parse_lvars())
         return 0;
     return parse_bco();
@@ -597,6 +717,7 @@ int analisa_sintaxe(const char *nome_arquivo)
         return 0;
     }
 
+    inicializa_tabela(&tabela_parser);
     inicializa_lex(arquivo_parser);
     atual = proximo_atomo();
     proximo = proximo_atomo();
@@ -624,4 +745,9 @@ int analisa_sintaxe(const char *nome_arquivo)
     }
 
     return 0;
+}
+
+TabelaSimbolos *obtem_tabela_parser(void)
+{
+    return &tabela_parser;
 }
