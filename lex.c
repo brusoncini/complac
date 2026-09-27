@@ -46,7 +46,8 @@ static TInfoAtomo verifica_reservada(char *texto)
             {"end", END},
             {"globvars", GLOBVARS},
             {"locvars", LOCVARS},
-            {"is", IS},
+            {"is", KIND},
+            {"ref", REF},
             {"echo", ECHO},
             {"get", GET},
             {"case", CASE},
@@ -236,7 +237,7 @@ TInfoAtomo proximo_atomo()
             int proximo = fgetc(arquivo_fonte);
 
             if (proximo == '>')
-                return cria_atomo(SETA, "->");
+                return cria_atomo(IMPLIC, "->");
 
             ungetc(proximo, arquivo_fonte);
 
@@ -416,8 +417,11 @@ char *nome_atomo(TAtomo atomo)
     case DOISPONTOS:
         return "DOISPONTOS";
 
-    case IS:
-        return "IS";
+    case KIND:
+        return "KIND";
+
+    case REF:
+        return "REF";
 
     case INT:
         return "INT";
@@ -428,8 +432,8 @@ char *nome_atomo(TAtomo atomo)
     case CHR:
         return "CHR";
 
-    case SETA:
-        return "SETA";
+    case IMPLIC:
+        return "IMPLIC";
 
     case ERRO:
         return "ERRO";

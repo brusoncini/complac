@@ -1,7 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -std=c99
-
-ARQUIVOS=main.c lex.c symtab.c
+ARQUIVOS=main.c lex.c symtab.c parser.c
 
 complac:
 	$(CC) $(CFLAGS) $(ARQUIVOS) -o complac
