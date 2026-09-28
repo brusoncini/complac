@@ -1,46 +1,18 @@
-# =========================
-# Binários compilados
-# =========================
-*.exe
-*.out
-*.o
-*.obj
+# Binario e arquivos de compilacao
 complac
-slac
-slac2
+*.o
+*.out
+*.exe
 
-# =========================
-# Arquivos temporários
-# =========================
-*.tmp
-*.swp
-*~
-.vscode/
-
-# =========================
-# Logs gerados pelo compilador
-# =========================
+# Logs gerados durante os testes
 *.tk
 *.ts
 *.trc
 *.log
 
-# =========================
-# Arquivos de teste gerados
-# =========================
-teste.slac
-teste-erro.slac
-*.slac~
-*.bak
-
-# =========================
-# Sistema operacional
-# =========================
+# Temporarios
+*.swp
+*~
+.vscode/
 .DS_Store
 Thumbs.db
-
-# =========================
-# Debug
-# =========================
-*.dSYM/
-core

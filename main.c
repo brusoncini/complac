@@ -4,7 +4,6 @@
 
 #include "lex.h"
 #include "parser.h"
-#include "symtab.h"
 #include "opts.h"
 #include "diag.h"
 
@@ -75,7 +74,8 @@ static void nome_log(const char *fonte, const char *ext, char *saida, size_t tam
 {
     snprintf(saida, tamanho, "%s", fonte);
     char *ponto = strrchr(saida, '.');
-    if (ponto != NULL) *ponto = '\0';
+    if (ponto != NULL)
+        *ponto = '\0';
     strncat(saida, ext, tamanho - strlen(saida) - 1);
 }
 
@@ -84,26 +84,34 @@ static int grava_tokens(const char *fonte)
     FILE *entrada = fopen(fonte, "r");
     char log_nome[512];
     nome_log(fonte, ".tk", log_nome, sizeof(log_nome));
-    FILE *saida = fopen(log_nome, "w");
-    if (entrada == NULL || saida == NULL)
+
+    if (entrada == NULL)
     {
-        if (entrada) fclose(entrada);
-        if (saida) fclose(saida);
+        fprintf(stderr, "Erro ao abrir arquivo fonte para gerar tokens.\n");
+        return 0;
+    }
+
+    FILE *saida = fopen(log_nome, "w");
+    if (saida == NULL)
+    {
+        fclose(entrada);
         fprintf(stderr, "Erro ao criar log de tokens.\n");
         return 0;
     }
 
     inicializa_lex(entrada);
+
     TInfoAtomo atomo;
     do
     {
         atomo = proximo_atomo();
-        fprintf(saida, "%d %s \"%s\"\n", atomo.linha,
-                categoria_log(atomo.atomo), atomo.texto);
+        fprintf(saida, "%d %s \"%s\"\n",
+                atomo.linha, categoria_log(atomo.atomo), atomo.texto);
     } while (atomo.atomo != FIMARQUIVO);
 
     fclose(entrada);
     fclose(saida);
+
     printf("Log de tokens: %s\n", log_nome);
     return 1;
 }
@@ -111,6 +119,7 @@ static int grava_tokens(const char *fonte)
 int main(int argc, char **argv)
 {
     TOpcoes opcoes;
+
     if (!opts_parse(argc, argv, &opcoes))
         return 1;
 
@@ -118,19 +127,22 @@ int main(int argc, char **argv)
 
     FILE *trace = NULL;
     char log_nome[512];
+    int sucesso_logs = 1;
 
     if (opcoes.opcao == OPCAO_TOKENS)
-        grava_tokens(opcoes.arquivo);
+        sucesso_logs = grava_tokens(opcoes.arquivo);
 
     if (opcoes.opcao == OPCAO_TRACE)
     {
         nome_log(opcoes.arquivo, ".trc", log_nome, sizeof(log_nome));
         trace = fopen(log_nome, "w");
+
         if (trace == NULL)
         {
             fprintf(stderr, "Erro ao criar log de rastreamento.\n");
             return 1;
         }
+
         diag_set_trace(trace);
     }
 
@@ -140,10 +152,11 @@ int main(int argc, char **argv)
     {
         nome_log(opcoes.arquivo, ".ts", log_nome, sizeof(log_nome));
         FILE *saida = fopen(log_nome, "w");
+
         if (saida == NULL)
         {
             fprintf(stderr, "Erro ao criar tabela de simbolos.\n");
-            sucesso = 0;
+            sucesso_logs = 0;
         }
         else
         {
@@ -159,5 +172,5 @@ int main(int argc, char **argv)
         printf("Log de rastreamento: %s\n", log_nome);
     }
 
-    return sucesso ? 0 : 1;
+    return (sucesso && sucesso_logs) ? 0 : 1;
 }

@@ -131,30 +131,61 @@ void imprime_tabela(TabelaSimbolos *tabela)
 }
 
 
+static void grava_simbolo_log(TSimbolo *simbolo, FILE *arquivo)
+{
+    if (simbolo->escopo == GLOBAL)
+        fprintf(arquivo, "SCOPE=global ");
+    else if (simbolo->escopo == PARAMETRO)
+        fprintf(arquivo, "SCOPE=proc:%s.params ", simbolo->contexto);
+    else
+        fprintf(arquivo, "SCOPE=proc:%s.locals ", simbolo->contexto);
+
+    fprintf(arquivo, "id=\"%s\" cat=%s tipo=%s extra=",
+            simbolo->lexema,
+            nome_categoria(simbolo->categoria),
+            nome_tipo(simbolo->tipo));
+
+    if (simbolo->tamanho_vetor > 0)
+        fprintf(arquivo, "VETOR=%d", simbolo->tamanho_vetor);
+    else if (simbolo->quantidade_parametros > 0)
+        fprintf(arquivo, "PARAMETROS=%d", simbolo->quantidade_parametros);
+    else
+        fprintf(arquivo, "-");
+
+    fprintf(arquivo, "\n");
+}
+
 void grava_tabela_log(TabelaSimbolos *tabela, FILE *arquivo)
 {
-    TSimbolo *atual = tabela->primeiro;
-    while (atual != NULL)
+    TSimbolo *atual;
+    TSimbolo *subrotina;
+
+    /* Primeiro todos os simbolos globais, preservando a ordem de insercao. */
+    for (atual = tabela->primeiro; atual != NULL; atual = atual->ordem_proximo)
     {
         if (atual->escopo == GLOBAL)
-            fprintf(arquivo, "SCOPE=global ");
-        else if (atual->escopo == PARAMETRO)
-            fprintf(arquivo, "SCOPE=proc:%s.params ", atual->contexto);
-        else
-            fprintf(arquivo, "SCOPE=proc:%s.locals ", atual->contexto);
+            grava_simbolo_log(atual, arquivo);
+    }
 
-        fprintf(arquivo, "id=\"%s\" cat=%s tipo=%s extra=",
-                atual->lexema, nome_categoria(atual->categoria), nome_tipo(atual->tipo));
+    /* Depois, parametros e locais agrupados por sub-rotina. */
+    for (subrotina = tabela->primeiro; subrotina != NULL; subrotina = subrotina->ordem_proximo)
+    {
+        if (subrotina->escopo != GLOBAL || subrotina->categoria != SUBROTINA)
+            continue;
 
-        if (atual->tamanho_vetor > 0)
-            fprintf(arquivo, "VETOR=%d", atual->tamanho_vetor);
-        else if (atual->quantidade_parametros > 0)
-            fprintf(arquivo, "PARAMETROS=%d", atual->quantidade_parametros);
-        else
-            fprintf(arquivo, "-");
+        for (atual = tabela->primeiro; atual != NULL; atual = atual->ordem_proximo)
+        {
+            if (atual->escopo == PARAMETRO &&
+                strcmp(atual->contexto, subrotina->lexema) == 0)
+                grava_simbolo_log(atual, arquivo);
+        }
 
-        fprintf(arquivo, "\n");
-        atual = atual->ordem_proximo;
+        for (atual = tabela->primeiro; atual != NULL; atual = atual->ordem_proximo)
+        {
+            if (atual->escopo == LOCAL &&
+                strcmp(atual->contexto, subrotina->lexema) == 0)
+                grava_simbolo_log(atual, arquivo);
+        }
     }
 }
 
@@ -249,4 +280,27 @@ TSimbolo *busca_simbolo_contexto(
         atual = atual->proximo;
     }
     return NULL;
+}
+
+
+TSimbolo *busca_no_escopo(
+    TabelaSimbolos *tabela,
+    const char *lexema,
+    TEscopo escopo_atual,
+    const char *contexto)
+{
+    TSimbolo *simbolo;
+
+    if (escopo_atual != GLOBAL)
+    {
+        simbolo = busca_simbolo_contexto(tabela, lexema, PARAMETRO, contexto);
+        if (simbolo != NULL)
+            return simbolo;
+
+        simbolo = busca_simbolo_contexto(tabela, lexema, LOCAL, contexto);
+        if (simbolo != NULL)
+            return simbolo;
+    }
+
+    return busca_simbolo_contexto(tabela, lexema, GLOBAL, "global");
 }

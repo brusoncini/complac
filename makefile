@@ -1,9 +1,13 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -std=c99
-ARQUIVOS=main.c lex.c symtab.c parser.c semantic.c diag.c opts.c
+ARQUIVOS=main.c lex.c symtab.c parser.c diag.c opts.c
 
-complac:
+all: complac
+
+complac: $(ARQUIVOS)
 	$(CC) $(CFLAGS) $(ARQUIVOS) -o complac
 
 clean:
 	rm -f complac *.tk *.ts *.trc
+
+.PHONY: all clean

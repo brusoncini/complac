@@ -92,6 +92,12 @@ TSimbolo *busca_simbolo_contexto(
     TEscopo escopo,
     const char *contexto);
 
+TSimbolo *busca_no_escopo(
+    TabelaSimbolos *tabela,
+    const char *lexema,
+    TEscopo escopo_atual,
+    const char *contexto);
+
 void imprime_tabela(TabelaSimbolos *tabela);
 void grava_tabela_log(TabelaSimbolos *tabela, FILE *arquivo);
 
