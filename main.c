@@ -6,6 +6,7 @@
 #include "parser.h"
 #include "opts.h"
 #include "diag.h"
+#include "mepa.h"
 
 static const char *categoria_log(TAtomo atomo)
 {
@@ -147,6 +148,10 @@ int main(int argc, char **argv)
     }
 
     int sucesso = analisa_sintaxe(opcoes.arquivo);
+
+    /* A sintese ocorre somente apos a analise sintatica bem sucedida. */
+    if (sucesso)
+        sucesso = gera_mepa(opcoes.arquivo);
 
     if (opcoes.opcao == OPCAO_SYMTAB)
     {

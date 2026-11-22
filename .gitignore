@@ -5,10 +5,13 @@ complac
 *.exe
 
 # Logs gerados durante os testes
+.testes/
+*.slac
 *.tk
 *.ts
 *.trc
 *.log
+*.mepa
 
 # Temporarios
 *.swp
