@@ -1,0 +1,8 @@
+func soma(a: int, b: int): int
+start
+    return a + b;
+end
+proc main()
+start
+    echo(soma(1));
+end

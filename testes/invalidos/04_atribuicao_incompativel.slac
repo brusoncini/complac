@@ -1,0 +1,8 @@
+proc main()
+locvars
+    x is int;
+    c is chr;
+start
+    c << 'a';
+    x << c;
+end

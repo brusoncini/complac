@@ -1,0 +1,10 @@
+proc p(n: int)
+locvars
+    n is int;
+start
+    echo(n);
+end
+proc main()
+start
+    p(1);
+end

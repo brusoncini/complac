@@ -1,0 +1,11 @@
+proc p()
+locvars
+    segredo is int;
+start
+    segredo << 1;
+end
+proc main()
+start
+    p();
+    echo(segredo);
+end

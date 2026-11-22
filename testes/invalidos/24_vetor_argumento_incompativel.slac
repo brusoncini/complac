@@ -1,0 +1,10 @@
+proc p(v: int[5])
+start
+    echo(v[0]);
+end
+proc main()
+locvars
+    w is int[3];
+start
+    p(w);
+end

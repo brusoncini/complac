@@ -1,0 +1,23 @@
+# Vetores globais e locais: escrita, leitura e indice por expressao
+globvars
+    v is int[5];
+proc main()
+locvars
+    i, soma is int;
+    pares is int[3];
+start
+    for i from 0 to 4 do
+        v[i] << i * i;
+    end;
+    soma << 0;
+    for i from 0 to 4 do
+        soma << soma + v[i];
+    end;
+    echo(soma);
+    pares[0] << v[2];
+    pares[1] << v[v[1] + 1] + 1;
+    pares[2] << pares[0] + pares[1];
+    echo(pares[2]);
+    get(v[3]);
+    echo(v[3] + 1);
+end

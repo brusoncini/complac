@@ -5,6 +5,7 @@
 
 #define TAM_TABELA 211
 #define TAM_NOME 256
+#define MAX_PARAMETROS 32
 
 typedef enum
 {
@@ -39,8 +40,13 @@ typedef struct Simbolo
     TTipo tipo;
     TEscopo escopo;
     int tamanho_vetor;
-    int endereco; /* deslocamento de memoria usado pelo gerador MEPA */
+    int endereco;          /* deslocamento na MEPA (k em CRVL m,k) */
+    int nivel;             /* nivel lexico na MEPA (m em CRVL m,k) */
+    int eh_referencia;     /* parametro passado por referencia (ref) */
     int quantidade_parametros;
+    int tamanho_parametros; /* posicoes de memoria ocupadas pelos parametros */
+    char rotulo[16];       /* rotulo MEPA de entrada da sub-rotina */
+    struct Simbolo *parametros[MAX_PARAMETROS];
     char contexto[TAM_NOME];
     struct Simbolo *proximo;
     struct Simbolo *ordem_proximo;

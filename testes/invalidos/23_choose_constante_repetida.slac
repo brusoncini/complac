@@ -1,0 +1,7 @@
+proc main()
+start
+    choose (2)
+        match 1, 2 -> echo(1);
+        match 2 -> echo(2);
+    end;
+end

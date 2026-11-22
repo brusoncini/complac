@@ -1,0 +1,14 @@
+# Expressoes aritmeticas, precedencia e menos unario
+globvars
+    a, b, c is int;
+proc main()
+start
+    b << 5;
+    c << 10;
+    a << b + c * 2;
+    echo(a);
+    echo((b + c) * 2);
+    echo(c // 3);
+    echo(-b + 1);
+    echo(a - b - c);
+end

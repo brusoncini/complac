@@ -1,0 +1,11 @@
+proc dobra(ref x: int)
+start
+    x << x * 2;
+end
+proc main()
+locvars
+    a is int;
+start
+    a << 1;
+    dobra(a + 1);
+end
