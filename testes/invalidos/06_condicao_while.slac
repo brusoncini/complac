@@ -1,0 +1,9 @@
+proc main()
+locvars
+    x is int;
+start
+    x << 3;
+    while (x) do
+        x << x - 1;
+    end;
+end

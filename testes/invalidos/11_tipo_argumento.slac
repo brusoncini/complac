@@ -1,0 +1,8 @@
+proc p(c: chr)
+start
+    echo(c);
+end
+proc main()
+start
+    p(10);
+end

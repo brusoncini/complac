@@ -1,0 +1,59 @@
+# Passagem por referencia (escalares, elementos e vetores) e vetor por valor
+globvars
+    g is int;
+
+proc troca(ref a: int, ref b: int)
+locvars
+    t is int;
+start
+    t << a;
+    a << b;
+    b << t;
+end
+
+proc dobra(ref x: int)
+start
+    x << x * 2;
+end
+
+proc repassa(ref y: int)
+start
+    dobra(y);
+    get(y);
+end
+
+proc zera(ref w: int[3])
+locvars
+    i is int;
+start
+    for i from 0 to 2 do w[i] << 0; end;
+end
+
+func soma_copia(w: int[3]): int
+start
+    w[0] << 1000;
+    return w[0] + w[1] + w[2];
+end
+
+proc main()
+locvars
+    p, q is int;
+    vet is int[3];
+start
+    p << 1;
+    q << 2;
+    troca(p, q);
+    echo(p, q);
+    g << 21;
+    dobra(g);
+    echo(g);
+    vet[0] << 5; vet[1] << 6; vet[2] << 7;
+    troca(vet[0], vet[2]);
+    echo(vet[0]);
+    echo(soma_copia(vet));
+    echo(vet[0]);
+    repassa(vet[1]);
+    echo(vet[1]);
+    zera(vet);
+    echo(vet[0] + vet[1] + vet[2]);
+end

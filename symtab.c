@@ -64,6 +64,13 @@ int insere_simbolo_contexto(
     novo->escopo = escopo;
     novo->tamanho_vetor = 0;
     novo->quantidade_parametros = 0;
+    novo->tamanho_parametros = 0;
+    novo->endereco = 0;
+    novo->nivel = 0;
+    novo->eh_referencia = 0;
+    novo->rotulo[0] = '\0';
+    for (int i = 0; i < MAX_PARAMETROS; i++)
+        novo->parametros[i] = NULL;
     strcpy(novo->contexto, contexto);
     novo->ordem_proximo = NULL;
     novo->proximo = tabela->tabela[posicao];

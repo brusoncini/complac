@@ -1,0 +1,10 @@
+proc p()
+start
+    echo(1);
+end
+proc main()
+locvars
+    x is int;
+start
+    x << p() + 1;
+end

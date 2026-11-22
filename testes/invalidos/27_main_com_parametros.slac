@@ -1,0 +1,4 @@
+proc main(x: int)
+start
+    echo(x);
+end

@@ -1,0 +1,6 @@
+proc main()
+locvars
+    s is chr[4];
+start
+    s << "abcdef";
+end

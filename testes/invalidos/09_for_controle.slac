@@ -1,0 +1,8 @@
+proc main()
+locvars
+    b is logic;
+start
+    for b from 1 to 3 do
+        echo(1);
+    end;
+end

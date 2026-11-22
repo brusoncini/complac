@@ -1,0 +1,8 @@
+func f(): int
+start
+    echo(1);
+end
+proc main()
+start
+    echo(f());
+end

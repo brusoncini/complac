@@ -1,0 +1,8 @@
+proc p()
+start
+    echo(1);
+end
+proc main()
+start
+    p << 2;
+end

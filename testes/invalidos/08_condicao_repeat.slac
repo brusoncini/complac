@@ -1,0 +1,8 @@
+proc main()
+locvars
+    c is chr;
+start
+    repeat
+        c << 'a';
+    until (c);
+end

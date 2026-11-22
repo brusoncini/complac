@@ -1,0 +1,4 @@
+proc main()
+start
+    echo((1 < 2) > (2 < 3));
+end

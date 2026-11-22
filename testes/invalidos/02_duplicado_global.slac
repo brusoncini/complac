@@ -1,0 +1,7 @@
+globvars
+    a is int;
+    a is chr;
+proc main()
+start
+    a << 1;
+end

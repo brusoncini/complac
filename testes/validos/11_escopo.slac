@@ -1,0 +1,21 @@
+# Escopos: local e parametro escondem globais de mesmo nome
+globvars
+    x, y is int;
+
+proc p(x: int)
+locvars
+    y is int;
+start
+    y << x + 1;
+    echo(y);
+end
+
+proc main()
+locvars
+    y is int;
+start
+    x << 10;
+    y << 20;
+    p(5);
+    echo(x, y);
+end

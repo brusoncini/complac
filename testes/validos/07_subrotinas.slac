@@ -1,0 +1,41 @@
+# Procedimentos e funcoes, parametros por valor e recursao
+globvars
+    contador is int;
+
+proc incrementa(qtd: int)
+start
+    contador << contador + qtd;
+end
+
+func fatorial(n: int): int
+start
+    case (n <= 1) return 1; end;
+    return n * fatorial(n - 1);
+end
+
+func fib(n: int): int
+locvars
+    a, b is int;
+start
+    case (n < 2) return n; end;
+    a << fib(n - 1);
+    b << fib(n - 2);
+    return a + b;
+end
+
+func maior(a: int, b: int): int
+start
+    case (a > b) return a; otherwise return b; end;
+end
+
+proc main()
+start
+    contador << 0;
+    incrementa(5);
+    incrementa(fatorial(3));
+    echo(contador);
+    echo(fatorial(5));
+    echo(fib(10));
+    echo(maior(3, 9) + maior(4, 2));
+    fatorial(2);
+end

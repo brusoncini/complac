@@ -1,0 +1,21 @@
+# Impressao de strings, caracteres e vetores chr
+proc mostra(s: chr[13])
+start
+    echo(s);
+end
+
+proc main()
+locvars
+    msg is chr[13];
+    c is chr;
+start
+    echo("Hello world\n");
+    msg << "Ola SLAC\n";
+    echo(msg);
+    mostra(msg);
+    c << 'Z';
+    echo(c, "\n");
+    echo("x = ", 10);
+    msg[1] << 'o';
+    echo(msg[1]);
+end

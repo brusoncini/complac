@@ -1,0 +1,6 @@
+proc main()
+locvars
+    v is int[3];
+start
+    v[3] << 1;
+end

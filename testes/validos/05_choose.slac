@@ -1,0 +1,16 @@
+# choose / match / others, inclusive aninhado em laco
+proc main()
+locvars
+    i is int;
+start
+    for i from 0 to 5 do
+        choose (i * 2)
+            match 0 -> echo(10);
+            match 2, 4 -> echo(20);
+            match 8 -> choose (i)
+                           match 4 -> echo(44);
+                       end;
+            others -> echo(-1);
+        end;
+    end;
+end

@@ -1,0 +1,8 @@
+proc p()
+start
+    return 1;
+end
+proc main()
+start
+    p();
+end
