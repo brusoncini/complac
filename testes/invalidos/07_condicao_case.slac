@@ -1,0 +1,4 @@
+proc main()
+start
+    case (1 + 1) echo(1); end;
+end

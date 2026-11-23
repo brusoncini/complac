@@ -1,0 +1,8 @@
+func f(): int
+start
+    return 'a';
+end
+proc main()
+start
+    echo(f());
+end

@@ -1,0 +1,8 @@
+proc main()
+locvars
+    v is int[3];
+    c is chr;
+start
+    c << 'a';
+    v[c] << 1;
+end

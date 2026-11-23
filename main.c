@@ -6,6 +6,7 @@
 #include "parser.h"
 #include "opts.h"
 #include "diag.h"
+#include "gerador.h"
 
 static const char *categoria_log(TAtomo atomo)
 {
@@ -146,7 +147,21 @@ int main(int argc, char **argv)
         diag_set_trace(trace);
     }
 
+    /* Analise lexica, sintatica, semantica e geracao de codigo MEPA
+       acontecem juntas no ASDR (traducao dirigida a sintaxe). */
+    char destino_mepa[512];
+    nome_log(opcoes.arquivo, ".mepa", destino_mepa, sizeof(destino_mepa));
+
+    if (!gerador_inicia())
+    {
+        fprintf(stderr, "Erro ao criar area temporaria para o codigo MEPA.\n");
+        return 1;
+    }
+
     int sucesso = analisa_sintaxe(opcoes.arquivo);
+
+    /* O .mepa so e gravado sem erros; um arquivo antigo e removido. */
+    sucesso = gerador_finaliza(destino_mepa, sucesso) && sucesso;
 
     if (opcoes.opcao == OPCAO_SYMTAB)
     {

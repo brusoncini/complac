@@ -1,0 +1,4 @@
+proc main()
+start
+    inexistente(1);
+end

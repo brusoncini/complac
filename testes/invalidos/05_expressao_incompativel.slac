@@ -1,0 +1,8 @@
+proc main()
+locvars
+    x is int;
+    b is logic;
+start
+    b << 1 < 2;
+    x << 1 + b;
+end

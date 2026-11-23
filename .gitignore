@@ -5,10 +5,21 @@ complac
 *.exe
 
 # Logs gerados durante os testes
+.testes/
+*.slac
+!testes/**/*.slac
 *.tk
 *.ts
 *.trc
 *.log
+*.mepa
+
+# Saidas temporarias dos testes
+testes/**/*.saida
+testes/**/*.err
+
+# Interpretador MEPA da disciplina (copiar localmente para executar os testes)
+interpretador/
 
 # Temporarios
 *.swp

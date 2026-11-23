@@ -1,0 +1,15 @@
+# Operadores relacionais e logicos
+globvars
+    x, y is int;
+    ok is logic;
+proc main()
+start
+    x << 3;
+    y << 7;
+    ok << x < y & y ~= 0;
+    echo(ok);
+    echo(~ok);
+    echo(x >= y | x = 3);
+    echo('a' = 'a');
+    case (ok & ~(x > y)) echo(1); otherwise echo(0); end;
+end
